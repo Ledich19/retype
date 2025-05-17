@@ -95,7 +95,7 @@ jobs:
           echo "Starting Windows build"
           cargo build --verbose --release --target x86_64-pc-windows-msvc || { echo "Windows build failed"; exit 1; }
           echo "Listing release directory:"
-          ls -la target/x86_64-pc-windows-msvc/release/ || echo "Windows release directory not found"
+          Get-ChildItem -Force -Recurse target/x86_64-pc-windows-msvc/release/ -ErrorAction SilentlyContinue
       - name: Build archive
         shell: bash
         run: |

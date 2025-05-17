@@ -6,60 +6,106 @@ on:
 permissions:
   contents: write
 jobs:
-  build-and-upload:
-    name: Build and upload (${{ matrix.build }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - build: linux
-            os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - build: macos
-            os: macos-latest
-            target: x86_64-apple-darwin
-          - build: windows
-            os: windows-latest
-            target: x86_64-pc-windows-msvc
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install dependencies (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y p7zip-full libx11-dev libxcb-shape0-dev
-      - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install p7zip
-          brew install libx11 || true # X11 может не понадобиться, но пробуем
-      - name: Get the release version from the tag
+      - name: Get the release version
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: x86_64-unknown-linux-gnu
       - name: Build
         run: |
-          cargo build --verbose --release --target ${{ matrix.target }} || exit 1
-          ls -la target/${{ matrix.target }}/release/ || echo "Release directory not found"
+          echo "Starting Linux build"
+          cargo build --verbose --release --target x86_64-unknown-linux-gnu || { echo "Linux build failed"; exit 1; }
+          echo "Listing release directory:"
+          ls -la target/x86_64-unknown-linux-gnu/release/ || echo "Linux release directory not found"
       - name: Build archive
         shell: bash
         run: |
           binary_name="clipboard-inverter"
-          dirname="$binary_name-${{ env.VERSION }}-${{ matrix.target }}"
+          dirname="$binary_name-${{ env.VERSION }}-x86_64-unknown-linux-gnu"
           mkdir -p "$dirname"
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            ls -la target/${{ matrix.target }}/release/ || echo "Windows release directory not found"
-            mv "target/${{ matrix.target }}/release/$binary_name.exe" "$dirname/" || { echo "Failed to move Windows binary"; exit 1; }
-            7z a "$dirname.zip" "$dirname/" || { echo "Failed to zip Windows archive"; exit 1; }
-            echo "ASSET=$dirname.zip" >> $GITHUB_ENV
-          else
-            ls -la target/${{ matrix.target }}/release/ || echo "Non-Windows release directory not found"
-            mv "target/${{ matrix.target }}/release/$binary_name" "$dirname/" || { echo "Failed to move binary"; exit 1; }
-            tar -czf "$dirname.tar.gz" "$dirname/" || { echo "Failed to tar archive"; exit 1; }
-            echo "ASSET=$dirname.tar.gz" >> $GITHUB_ENV
-          fi
+          mv "target/x86_64-unknown-linux-gnu/release/$binary_name" "$dirname/" || { echo "Failed to move Linux binary"; exit 1; }
+          tar -czf "$dirname.tar.gz" "$dirname/" || { echo "Failed to tar Linux archive"; exit 1; }
+          echo "ASSET=$dirname.tar.gz" >> $GITHUB_ENV
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.ASSET }}
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: brew install p7zip
+      - name: Get the release version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+      - name: Build
+        run: |
+          echo "Starting macOS build"
+          cargo build --verbose --release --target x86_64-apple-darwin || { echo "macOS build failed"; exit 1; }
+          echo "Listing release directory:"
+          ls -la target/x86_64-apple-darwin/release/ || echo "macOS release directory not found"
+      - name: Build archive
+        shell: bash
+        run: |
+          binary_name="clipboard-inverter"
+          dirname="$binary_name-${{ env.VERSION }}-x86_64-apple-darwin"
+          mkdir -p "$dirname"
+          mv "target/x86_64-apple-darwin/release/$binary_name" "$dirname/" || { echo "Failed to move macOS binary"; exit 1; }
+          tar -czf "$dirname.tar.gz" "$dirname/" || { echo "Failed to tar macOS archive"; exit 1; }
+          echo "ASSET=$dirname.tar.gz" >> $GITHUB_ENV
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.ASSET }}
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install 7z
+        run: choco install 7zip
+      - name: Get the release version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - name: Build
+        run: |
+          echo "Starting Windows build"
+          cargo build --verbose --release --target x86_64-pc-windows-msvc || { echo "Windows build failed"; exit 1; }
+          echo "Listing release directory:"
+          ls -la target/x86_64-pc-windows-msvc/release/ || echo "Windows release directory not found"
+      - name: Build archive
+        shell: bash
+        run: |
+          binary_name="clipboard-inverter"
+          dirname="$binary_name-${{ env.VERSION }}-x86_64-pc-windows-msvc"
+          mkdir -p "$dirname"
+          mv "target/x86_64-pc-windows-msvc/release/$binary_name.exe" "$dirname/" || { echo "Failed to move Windows binary"; exit 1; }
+          7z a "$dirname.zip" "$dirname/" || { echo "Failed to zip Windows archive"; exit 1; }
+          echo "ASSET=$dirname.zip" >> $GITHUB_ENV
       - name: Release
         uses: softprops/action-gh-release@v1
         with:

@@ -39,10 +39,10 @@ To build and run this application, you need:
 6. Errors (e.g., clipboard access issues) are displayed in red above the text areas.
 
 ## Building for Different Platforms
-This project uses GitHub Actions to build binaries for Windows, Linux, and macOS, which are available in the [Releases](https://github.com/your-username/clipboard-inverter/releases) section.
+This project uses GitHub Actions to build binaries for Windows, Linux, and macOS, which are available in the [Releases](https://github.com/Ledich19/retype/tags) section.
 
 ### Download Pre-Built Binaries
-- Go to the [Releases](https://github.com/your-username/clipboard-inverter/releases) page.
+- Go to the [Releases](https://github.com/Ledich19/retype/tags) page.
 - Download the appropriate binary for your platform:
   - `clipboard-inverter-windows-amd64.exe` for Windows
   - `clipboard-inverter-linux-amd64` for Linux
@@ -64,7 +64,19 @@ To cross-compile locally, use `cross-rs`:
 
 
 
+
+Укажи версию в Cargo.toml:
+toml
+
+Копировать
+[package]
+name = "clipboard-inverter"
+version = "1.0.0"
+Создай тег:
+bash
+
+Копировать
 git add Cargo.toml
-git commit -m "Set version to 0.1.0"
-git tag 0.1.0
-git push origin 0.1.0
+git commit -m "Set version to 1.0.0"
+git tag 1.0.0
+git push origin 1.0.0

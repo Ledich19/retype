@@ -62,3 +62,9 @@ To cross-compile locally, use `cross-rs`:
    ```
    Find binaries in `target/<target>/release/`.
 
+
+
+git add Cargo.toml
+git commit -m "Set version to 0.1.0"
+git tag 0.1.0
+git push origin 0.1.0

@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y p7zip-full libx11-dev libxcb-shape0-dev
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full libx11-dev libxcb-shape0-dev libgtk-3-dev
       - name: Get the release version
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
@@ -30,7 +30,7 @@ jobs:
       - name: Build archive
         shell: bash
         run: |
-          binary_name="clipboard-inverter"
+          binary_name="retype"  # Изменили на retype
           dirname="$binary_name-${{ env.VERSION }}-x86_64-unknown-linux-gnu"
           mkdir -p "$dirname"
           mv "target/x86_64-unknown-linux-gnu/release/$binary_name" "$dirname/" || { echo "Failed to move Linux binary"; exit 1; }
@@ -40,7 +40,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.ASSET }}
-
+  # macOS и Windows jobs оставляем без изменений пока
   build-macos:
     name: Build macOS
     runs-on: macos-latest
@@ -65,7 +65,7 @@ jobs:
       - name: Build archive
         shell: bash
         run: |
-          binary_name="clipboard-inverter"
+          binary_name="retype"  # Изменили на retype
           dirname="$binary_name-${{ env.VERSION }}-x86_64-apple-darwin"
           mkdir -p "$dirname"
           mv "target/x86_64-apple-darwin/release/$binary_name" "$dirname/" || { echo "Failed to move macOS binary"; exit 1; }
@@ -75,7 +75,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ env.ASSET }}
-
   build-windows:
     name: Build Windows
     runs-on: windows-latest
@@ -100,7 +99,7 @@ jobs:
       - name: Build archive
         shell: bash
         run: |
-          binary_name="clipboard-inverter"
+          binary_name="retype"  # Изменили на retype
           dirname="$binary_name-${{ env.VERSION }}-x86_64-pc-windows-msvc"
           mkdir -p "$dirname"
           mv "target/x86_64-pc-windows-msvc/release/$binary_name.exe" "$dirname/" || { echo "Failed to move Windows binary"; exit 1; }
